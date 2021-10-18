@@ -3,38 +3,59 @@ package com.anish.screen;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 
+import javax.swing.plaf.ColorUIResource;
+
 import com.anish.calabashbros.BubbleSorter;
 import com.anish.calabashbros.Calabash;
 import com.anish.calabashbros.World;
+import com.anish.calabashbros.Random;
 
 import asciiPanel.AsciiPanel;
 
 public class WorldScreen implements Screen {
 
     private World world;
-    private Calabash[] bros;
+    private Calabash[][] bros;
     String[] sortSteps;
 
     public WorldScreen() {
         world = new World();
 
-        bros = new Calabash[7];
+        bros = new Calabash[16][16];
 
-        bros[3] = new Calabash(new Color(204, 0, 0), 1, world);
-        bros[5] = new Calabash(new Color(255, 165, 0), 2, world);
-        bros[1] = new Calabash(new Color(252, 233, 79), 3, world);
-        bros[0] = new Calabash(new Color(78, 154, 6), 4, world);
-        bros[4] = new Calabash(new Color(50, 175, 255), 5, world);
-        bros[6] = new Calabash(new Color(114, 159, 207), 6, world);
-        bros[2] = new Calabash(new Color(173, 127, 168), 7, world);
+        Random rank = new Random();
 
-        world.put(bros[0], 10, 10);
-        world.put(bros[1], 12, 10);
-        world.put(bros[2], 14, 10);
-        world.put(bros[3], 16, 10);
-        world.put(bros[4], 18, 10);
-        world.put(bros[5], 20, 10);
-        world.put(bros[6], 22, 10);
+        for (int i = 0; i < 256; i++){
+            int row = rank.arr[i]/16;
+            int col = rank.arr[i]%16;
+            Color co;
+            if (i <= 51){
+                co = new Color(255, i*5, 0);
+                bros[row][col] = new Calabash(co, i, world);
+            }
+            else if (i > 51 && i <=102){
+                co = new Color(255 - (i-51)*5, 255, 0);
+                bros[row][col] = new Calabash(co, i, world);
+            }
+            else if (i > 102 && i <= 153){
+                co = new Color(0, 255, (i-102)*5);
+                bros[row][col] = new Calabash(co, i, world);
+            }
+            else if (i > 153 && i <= 204){
+                co = new Color(0, 255-(i-153)*5, 255);
+                bros[row][col] = new Calabash(co, i, world);
+            }
+            else if (i > 204 && i <= 255){
+                co = new Color((i-204)*5, 0, 255);
+                bros[row][col] = new Calabash(co, i, world);
+            }
+        }
+        for (int i = 0; i < 16; i++){
+            for (int j = 0; j < 16; j++){
+                world.put(bros[i][j], i*2, j*2);        
+            }
+        }
+       
 
         BubbleSorter<Calabash> b = new BubbleSorter<>();
         b.load(bros);
@@ -47,15 +68,17 @@ public class WorldScreen implements Screen {
         return plan.split("\n");
     }
 
-    private void execute(Calabash[] bros, String step) {
+    private void execute(Calabash[][] bros, String step) {
         String[] couple = step.split("<->");
         getBroByRank(bros, Integer.parseInt(couple[0])).swap(getBroByRank(bros, Integer.parseInt(couple[1])));
     }
 
-    private Calabash getBroByRank(Calabash[] bros, int rank) {
-        for (Calabash bro : bros) {
-            if (bro.getRank() == rank) {
-                return bro;
+    private Calabash getBroByRank(Calabash[][] bros, int rank) {
+        for (Calabash[] bro : bros) {
+            for (Calabash bo : bro){
+                if (bo.getRank() == rank) {
+                    return bo;
+                }
             }
         }
         return null;
