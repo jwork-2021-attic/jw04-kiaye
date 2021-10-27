@@ -46,7 +46,7 @@ public class ApplicationMain extends JFrame implements KeyListener {
     }
 
     @Override
-    public void repaint() {
+    public void  repaint() {
         terminal.clear();
         screen.displayOutput(terminal);
         super.repaint();

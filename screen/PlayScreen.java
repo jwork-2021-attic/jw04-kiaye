@@ -18,6 +18,7 @@
 package screen;
 
 import world.*;
+import world.Dfs.point;
 import asciiPanel.AsciiPanel;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
@@ -36,14 +37,19 @@ public class PlayScreen implements Screen {
     private int screenHeight;
     private List<String> messages;
     private List<String> oldMessages;
+    private int endx;
+    private int endy;
+    private int nextx;
+    private int nexty;
 
     public PlayScreen() {
-        this.screenWidth = 80;
-        this.screenHeight = 24;
+        this.screenWidth = 31;
+        this.screenHeight = 31;
         createWorld();
         this.messages = new ArrayList<String>();
         this.oldMessages = new ArrayList<String>();
 
+        createxit();
         CreatureFactory creatureFactory = new CreatureFactory(this.world);
         createCreatures(creatureFactory);
     }
@@ -51,13 +57,13 @@ public class PlayScreen implements Screen {
     private void createCreatures(CreatureFactory creatureFactory) {
         this.player = creatureFactory.newPlayer(this.messages);
 
-        for (int i = 0; i < 8; i++) {
-            creatureFactory.newFungus();
-        }
+        // for (int i = 0; i < 8; i++) {
+        //     creatureFactory.newFungus();
+        // }
     }
 
     private void createWorld() {
-        world = new WorldBuilder(90, 31).makeCaves().build();
+        world = new WorldBuilder(32, 32).makeCaves().build();
     }
 
     private void displayTiles(AsciiPanel terminal, int left, int top) {
@@ -75,15 +81,38 @@ public class PlayScreen implements Screen {
             }
         }
         // Show creatures
-        for (Creature creature : world.getCreatures()) {
-            if (creature.x() >= left && creature.x() < left + screenWidth && creature.y() >= top
-                    && creature.y() < top + screenHeight) {
-                if (player.canSee(creature.x(), creature.y())) {
-                    terminal.write(creature.glyph(), creature.x() - left, creature.y() - top, creature.color());
+        // for (Creature creature : world.getCreatures()) {
+        //     if (creature.x() >= left && creature.x() < left + screenWidth && creature.y() >= top
+        //             && creature.y() < top + screenHeight) {
+        //         if (player.canSee(creature.x(), creature.y())) {
+        //             terminal.write(creature.glyph(), creature.x() - left, creature.y() - top, creature.color());
+        //         }
+        //     }
+        // }
+        // Creatures can choose their next action now
+
+        // Show paths
+        Dfs dfs = new Dfs(this.world, player.x(), player.y(), endx, endy);
+        dfs.dfs();
+        point p = dfs.findpath();
+        nextx = p.getx();
+        nexty = p.gety();
+        for (Path path : world.getPaths()){
+            if (path.x() >= left && path.x() < left + screenWidth && path.y() >= top
+                && path.y() < top + screenHeight) {
+                if (player.canSee(path.x(), path.y())) {
+                    terminal.write(path.glyph(), path.x() - left, path.y() - top, path.color());
                 }
             }
         }
-        // Creatures can choose their next action now
+        for (Path path : world.getPaths2()){
+            if (path.x() >= left && path.x() < left + screenWidth && path.y() >= top
+                && path.y() < top + screenHeight) {
+                if (player.canSee(path.x(), path.y())) {
+                    terminal.write(path.glyph(), path.x() - left, path.y() - top, path.color());
+                }
+            }
+        }
         world.update();
     }
 
@@ -103,10 +132,10 @@ public class PlayScreen implements Screen {
         // Player
         terminal.write(player.glyph(), player.x() - getScrollX(), player.y() - getScrollY(), player.color());
         // Stats
-        String stats = String.format("%3d/%3d hp", player.hp(), player.maxHP());
-        terminal.write(stats, 1, 23);
+        // String stats = String.format("%3d/%3d hp", player.hp(), player.maxHP());
+        // terminal.write(stats, 1, 23);
         // Messages
-        displayMessages(terminal, this.messages);
+        //displayMessages(terminal, this.messages);
     }
 
     @Override
@@ -124,6 +153,9 @@ public class PlayScreen implements Screen {
             case KeyEvent.VK_DOWN:
                 player.moveBy(0, 1);
                 break;
+            case KeyEvent.VK_A:
+                automove();
+                break;
         }
         return this;
     }
@@ -135,5 +167,24 @@ public class PlayScreen implements Screen {
     public int getScrollY() {
         return Math.max(0, Math.min(player.y() - screenHeight / 2, world.height() - screenHeight));
     }
+    private void createxit(){
+        for (int i = screenWidth - 1; i >= 0; i--){
+            for (int j = screenHeight -1; j >= 0; j--){
+                if (this.world.tile(i, j).isGround()){
+                    endx = i;
+                    endy = j;
 
+                    Path path = new Path(world, (char)6, AsciiPanel.green);
+                    path.setX(endx);
+                    path.setY(endy);
+                    this.world.addpath(path);
+                    return;
+                }
+            }
+        }
+    }
+
+    private void automove(){
+        player.moveBy(nextx-player.x(), nexty-player.y());
+    }
 }

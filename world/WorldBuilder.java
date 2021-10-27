@@ -1,6 +1,7 @@
 package world;
 
 import java.util.Random;
+import maze_generator.MazeGenerator;
 
 /*
  * Copyright (C) 2015 s-zhouj
@@ -45,11 +46,29 @@ public class WorldBuilder {
                 Random rand = new Random();
                 switch (rand.nextInt(World.TILE_TYPES)) {
                     case 0:
-                        tiles[width][height] = Tile.FLOOR;
-                        break;
-                    case 1:
                         tiles[width][height] = Tile.WALL;
                         break;
+                    case 1:
+                        tiles[width][height] = Tile.FLOOR;
+                        break;
+                }
+            }
+        }
+        return this;
+    }
+
+    private WorldBuilder mazeTiles(){
+        MazeGenerator maze_matrix = new MazeGenerator(width,height);
+        maze_matrix.generateMaze();
+        for (int width = 0; width < this.width; width++) {
+            for (int height = 0; height < this.height; height++) {
+                switch(maze_matrix.maze[width][height]){
+                    case 0:
+                    tiles[width][height] = Tile.WALL;
+                    break;
+                    case 1:
+                    tiles[width][height] = Tile.FLOOR;
+                    break;
                 }
             }
         }
@@ -94,6 +113,6 @@ public class WorldBuilder {
     }
 
     public WorldBuilder makeCaves() {
-        return randomizeTiles().smooth(8);
+        return mazeTiles();
     }
 }

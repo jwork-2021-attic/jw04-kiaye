@@ -19,6 +19,8 @@ package world;
 
 import java.util.List;
 
+import asciiPanel.AsciiPanel;
+
 /**
  *
  * @author Aeranythe Echosong
@@ -32,10 +34,19 @@ public class PlayerAI extends CreatureAI {
         this.messages = messages;
     }
 
-    public void onEnter(int x, int y, Tile tile) {
+    public void onEnter(int x, int y, Tile tile, int ix, int iy, World world) {
         if (tile.isGround()) {
             creature.setX(x);
             creature.setY(y);
+            Path path = new Path(world, (char)24, AsciiPanel.red);
+            if (world.path(x,y) != null){   
+                world.removePath(world.path(x, y));
+            }
+            else{
+                path.setX(ix);
+                path.setY(iy);
+                world.addpath(path);
+            }
         } else if (tile.isDiggable()) {
             creature.dig(x, y);
         }
